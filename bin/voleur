@@ -1,0 +1,54 @@
+#!/usr/bin/env python
+
+"""
+A tool for extracting and anonymizing data from PostgreSQL databases.
+
+Usage:
+    voleur stash <source> -b <bucket> [-t <tag>...] [-c <config>]
+    voleur restore <dump> <target> -b <bucket>
+
+Commands:
+    stash      Extracts and anonymizes data from the `source` PostgreSQL database and
+               "stashes" the export in a S3 bucket.
+    restore    Restores the given stashed dump from the S3 bucket.
+
+Arguments:
+    <source>     A source PostgreSQL URI for reading the data to anonymize and stash.
+    <target>     A PostgreSQL database URI for restoring a stashed dump.
+    <dump>       An identifier for the dump to restore. It can be either a dump id or a
+                 tag.
+
+Options:
+    -c <config>  Voleur uses `klepto` for extracting data under the hoold. This is a path
+                 to a `klepto` config file, defaults to `<stash>.toml`.
+    -b <bucket>  The stash bucket.
+    -t <tag>...  One or more optional tags to apply to the dump.
+
+"""
+
+from voleur import cmd
+from voleur import cli
+import os
+import sys
+
+from docopt import docopt
+
+# Set up the PYTHONPATH to be able to import from `voleur`."""
+package = os.path.join(os.path.dirname(__file__), '..')
+sys.path.insert(0, os.path.abspath(package))
+
+
+def main(arguments: dict):
+    env = cli.Env(arguments)
+    try:
+        if arguments['stash']:
+            cmd.stash(env)
+        elif arguments['restore']:
+            cmd.restore(env)
+    except Exception as e:
+        # Default error handling.
+        env.die(f'❌ Error: {e}')
+
+
+if __name__ == '__main__':
+    main(docopt(__doc__))

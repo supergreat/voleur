@@ -13,7 +13,7 @@ def stash(env: cli.Env):
     """Runs the `stash` CLI command,.
 
     Args:
-        arguments: Docopt argument dict.
+        env: CLI environment.
 
     """
     source = env.get_arg('<source>')
@@ -21,19 +21,29 @@ def stash(env: cli.Env):
     tags = env.get_arg('-t')
     klepto_config = env.get_arg('-c')
 
-    env.info('Extracting dump...')
+    env.info('💭 Extracting dump...')
 
     with dumper.extract_dump(source, klepto_config=klepto_config) as stream:
         path = f'{bucket}/{utils.generate_dump_filename()}'
         storage_url = storage.store_stream('s3', path, stream)
 
-    env.info(f'Dump extracted: {storage_url}')
+    env.info(f'👍 Dump extracted: {storage_url}')
 
     stash = repo.StashRepo.load(bucket)
     update_fn = functools.partial(_add_dump, storage_url, tags=tags)
     dump = _safely_update_stash(update_fn, stash)
 
-    env.ok(f'Dump stashed: id: {dump.dump_id}, tags: {stash.get_tags(dump.dump_id)}')
+    env.ok(f'✅ Dump stashed: id: {dump.dump_id}, tags: {stash.get_tags(dump.dump_id)}')
+
+
+def restore(env: cli.Env):
+    """Runs the `restore` CLI command,.
+
+    Args:
+        env: CLI environment.
+
+    """
+    env.die(f'❌ Not implemented yet')
 
 
 def _add_dump(storage_url: str, stash: models.Stash, tags: List[str] = None):
