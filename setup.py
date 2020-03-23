@@ -16,7 +16,7 @@ setuptools.setup(
     long_description_content_type='text/markdown',
     url='https://github.com/supergreat/voleur',
     packages=setuptools.find_packages(),
-    install_requires=['boto3'],
+    install_requires=['boto3', 'docopt'],
     include_package_data=True,
     classifiers=[
         'Programming Language :: Python :: 3',
