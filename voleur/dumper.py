@@ -1,9 +1,8 @@
-import io
 import os
 import subprocess
 import contextlib
 import platform
-from typing import ContextManager, Iterator, List, Optional, cast
+from typing import ContextManager, Iterator, List, Optional, BinaryIO, cast
 
 
 DEFAULT_KLEPTO_CONFIG = 'klepto.toml'
@@ -16,7 +15,7 @@ class DumperError(Exception):
 
 def extract_dump(
     source_uri: str, klepto_config: Optional[str] = None,
-) -> ContextManager[io.BufferedReader]:
+) -> ContextManager[BinaryIO]:
     """Extracts and anonymizes a dump from the source database.
 
     Returns a context manager which yields a stream containing the data (as bytes) from
@@ -27,7 +26,7 @@ def extract_dump(
         klepto_config (optional): Path to a klepto config file
 
     Returns:
-        ContextManager[IO[bytes]]
+        ContextManager[BinaryIO]
 
     """
     if not klepto_config:
@@ -37,7 +36,7 @@ def extract_dump(
 
 
 @contextlib.contextmanager
-def _klepto_steal(from_uri: str, *, config: str) -> Iterator[io.BufferedReader]:
+def _klepto_steal(from_uri: str, *, config: str) -> Iterator[BinaryIO]:
     """Runs klepto and streams its output.
 
     Args:
@@ -48,7 +47,7 @@ def _klepto_steal(from_uri: str, *, config: str) -> Iterator[io.BufferedReader]:
         DumperError: If there's an error in running the klepto command,
 
     Yields:
-        io.BufferedReader: A stream to read the output from klepto.
+        BinaryIO: A stream to read the output from klepto.
 
     """
     try:
@@ -70,7 +69,7 @@ def _klepto_steal(from_uri: str, *, config: str) -> Iterator[io.BufferedReader]:
         err_msg = _extract_stderr_err_msg(stderr)
         if err_msg:
             raise DumperError(err_msg)
-        yield cast(io.BufferedReader, stdout)
+        yield cast(BinaryIO, stdout)
     finally:
         stdout.close()
         stderr.close()

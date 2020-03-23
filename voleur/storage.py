@@ -1,7 +1,7 @@
 import abc
 import io
 import contextlib
-from typing import Iterator, ContextManager
+from typing import Iterator, ContextManager, BinaryIO, cast
 
 import boto3
 from botocore import exceptions as botocore_exc
@@ -47,13 +47,13 @@ def store(backend: str, path: str, content: str) -> str:
     return make_storage_url(backend, path)
 
 
-def store_stream(backend: str, path: str, stream: io.BufferedIOBase) -> str:
+def store_stream(backend: str, path: str, stream: BinaryIO) -> str:
     """Stores the contents of the stream at the given path.
 
     Args:
         backend: The storage backend to use.
         path: The storage path.
-        stream: Buffered reader to read the content from.
+        stream: Bytes stream to read the content from.
 
     Raises:
         StorageBackendNotSupported
@@ -84,7 +84,7 @@ def read(backend: str, path: str) -> str:
     return get_backend(backend).read(path)
 
 
-def stream(backend: str, path: str) -> ContextManager[io.BufferedIOBase]:
+def stream(backend: str, path: str) -> ContextManager[BinaryIO]:
     """Context-manager for streaming the contents at the given path.
 
     Args:
@@ -95,7 +95,7 @@ def stream(backend: str, path: str) -> ContextManager[io.BufferedIOBase]:
         StorageBackendNotSupported
 
     Yields:
-        io.BufferedIOBase: Buffered stream to read from.
+        BinaryIO: Bytes stream to read from.
 
     """
     return get_backend(backend).stream(path)
@@ -116,7 +116,7 @@ def read_storage_url(storage_url: str) -> str:
     return read(backend, path)
 
 
-def stream_storage_url(storage_url: str) -> ContextManager[io.BufferedIOBase]:
+def stream_storage_url(storage_url: str) -> ContextManager[BinaryIO]:
     """Streams the contents at a storage URL.
 
     Args:
@@ -128,7 +128,7 @@ def stream_storage_url(storage_url: str) -> ContextManager[io.BufferedIOBase]:
         StorageBackendNotSupported
 
     Yields:
-        io.BufferedIOBase: Buffered stream to read from.
+        IO[bytes]: Bytes stream to read from.
 
     """
     backend, path = parse_storage_url(storage_url)
@@ -192,12 +192,12 @@ class StorageBackend(abc.ABC):
         """
 
     @abc.abstractmethod
-    def store_stream(self, path: str, stream: io.BufferedIOBase) -> str:
+    def store_stream(self, path: str, stream: BinaryIO) -> str:
         """Stores the contents of the stream at the given path.
 
         Args:
             path: The storage path.
-            stream: Buffered reader to read the content from.
+            stream: Bytes stream to read the content from.
 
         Returns:
             str: The file path.
@@ -221,7 +221,7 @@ class StorageBackend(abc.ABC):
 
     @abc.abstractmethod
     @contextlib.contextmanager
-    def stream(self, path: str) -> Iterator[io.BufferedIOBase]:
+    def stream(self, path: str) -> Iterator[BinaryIO]:
         """Context-manager for streaming the contents at the given path.
 
         Args:
@@ -231,7 +231,7 @@ class StorageBackend(abc.ABC):
             NotFoundError
 
         Yields:
-            io.BufferedIOBase: Buffered stream to read from.
+            BinaryIO: Bytes stream to read from.
 
         """
 
@@ -284,7 +284,7 @@ class S3(StorageBackend):
         self._client.put_object(Body=body, Bucket=bucket, Key=key)
         return path
 
-    def store_stream(self, path: str, stream: io.BufferedIOBase) -> str:
+    def store_stream(self, path: str, stream: BinaryIO) -> str:
         bucket, key = self._parse_path(path)
         self._client.upload_fileobj(stream, bucket, key)
         return path
@@ -305,15 +305,16 @@ class S3(StorageBackend):
         return fileobj.read().decode(self._ENCODING)
 
     @contextlib.contextmanager
-    def stream(self, path: str) -> Iterator[io.BufferedIOBase]:
+    def stream(self, path: str) -> Iterator[BinaryIO]:
         reader = None
 
         bucket, key = self._parse_path(path)
         resp = self._client.get_object(Bucket=bucket, Key=key)
 
         try:
+
             reader = io.BufferedReader(resp['Body']._raw_stream)
-            yield reader
+            yield cast(BinaryIO, reader)
         finally:
             if reader:
                 reader.close()
