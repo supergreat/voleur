@@ -17,6 +17,7 @@ setuptools.setup(
     url='https://github.com/supergreat/voleur',
     packages=setuptools.find_packages(),
     install_requires=['boto3'],
+    include_package_data=True,
     classifiers=[
         'Programming Language :: Python :: 3',
         'Development Status :: 2 - Pre-Alpha',
@@ -24,4 +25,5 @@ setuptools.setup(
         'Operating System :: MacOS :: MacOS X',
     ],
     python_requires='>=3.7',
+    scripts=['bin/voleur'],
 )
