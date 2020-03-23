@@ -3,9 +3,7 @@ from typing import Optional
 
 
 class Env:
-    """
-
-    """
+    """Simple class providing tools for a CLI environment."""
 
     RED = '31'
     GREEN = '32'

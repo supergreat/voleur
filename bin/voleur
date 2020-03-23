@@ -26,8 +26,6 @@ Options:
 
 """
 
-from voleur import cmd
-from voleur import cli
 import os
 import sys
 
@@ -36,6 +34,9 @@ from docopt import docopt
 # Set up the PYTHONPATH to be able to import from `voleur`."""
 package = os.path.join(os.path.dirname(__file__), '..')
 sys.path.insert(0, os.path.abspath(package))
+
+from voleur import cmd
+from voleur import cli
 
 
 def main(arguments: dict):
