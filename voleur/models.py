@@ -1,7 +1,7 @@
 import dataclasses
 import uuid
 from datetime import datetime
-from typing import List, Optional
+from typing import Iterable, List, Optional
 
 
 @dataclasses.dataclass
@@ -18,8 +18,8 @@ class Dump:
 
 @dataclasses.dataclass
 class Stash:
-    # The stash name.
-    name: str
+    # The stash bucket.
+    bucket: str
 
     # Mapping of tag -> dump_id.
     tags: dict = dataclasses.field(default_factory=dict)
@@ -74,3 +74,15 @@ class Stash:
         for tag in tags:
             self.tags[tag] = dump.dump_id
         return dump
+
+    def get_tags(self, dump_id: str) -> Iterable[str]:
+        """Returns a list of tags applied to the dump.
+
+        Args:
+            dump_id: The dump id to filter tags with.
+
+        Returns:
+            Iterable[str]
+
+        """
+        return [tag for tag, dump_id in self.tags.items() if dump_id == dump_id]
