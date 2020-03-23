@@ -5,7 +5,7 @@ with open('README.md', 'r') as fh:
 
 setuptools.setup(
     name='voleur',
-    version='0.0.2',
+    version='0.0.3',
     author='Supergreat Engineering',
     author_email='alexmic@supergreat.reviews',
     description=(
@@ -16,7 +16,7 @@ setuptools.setup(
     long_description_content_type='text/markdown',
     url='https://github.com/supergreat/voleur',
     packages=setuptools.find_packages(),
-    requires=['boto3'],
+    install_requires=['boto3'],
     classifiers=[
         'Programming Language :: Python :: 3',
         'Development Status :: 2 - Pre-Alpha',
