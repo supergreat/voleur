@@ -85,4 +85,4 @@ class Stash:
             Iterable[str]
 
         """
-        return [tag for tag, dump_id in self.tags.items() if dump_id == dump_id]
+        return [tag for tag, tag_dump_id in self.tags.items() if tag_dump_id == dump_id]
