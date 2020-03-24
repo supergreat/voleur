@@ -4,7 +4,7 @@
 A tool for extracting and anonymizing data from PostgreSQL databases.
 
 Usage:
-    voleur stash <source> -b <bucket> [-t <tag>...] [-c <config>]
+    voleur stash <source> -b <bucket> [-t <tag>]... [-c <config>]
     voleur restore <dump> <target> -b <bucket>
 
 Commands:
