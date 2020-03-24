@@ -5,8 +5,9 @@ from voleur import cli
 from voleur import storage
 from voleur import repo
 from voleur import utils
-from voleur import dumper
 from voleur import models
+from voleur import dumper
+from voleur import writer
 
 
 def stash(env: cli.Env):
@@ -27,7 +28,7 @@ def stash(env: cli.Env):
         path = f'{bucket}/{utils.generate_dump_filename()}'
         storage_url = storage.store_stream('s3', path, stream)
 
-    env.info(f'👍 Dump extracted: {storage_url}')
+    env.info(f'💩 Dump extracted: {storage_url}')
 
     stash = repo.StashRepo.load(bucket)
     update_fn = functools.partial(_add_dump, storage_url, tags=tags)
@@ -43,7 +44,21 @@ def restore(env: cli.Env):
         env: CLI environment.
 
     """
-    env.die(f'❌ Not implemented yet')
+    dump_id_or_tag = env.get_arg('<dump>')
+    target = env.get_arg('<target>')
+    bucket = env.get_arg('-b')
+
+    stash = repo.StashRepo.load(bucket)
+    dump = stash.get_dump(dump_id_or_tag)
+    if not dump:
+        return env.die(f'❌ Dump not found: {dump_id_or_tag}')
+
+    env.info(f'🥤 Restoring dump...')
+
+    with storage.stream_storage_url(dump.storage_url) as stream:
+        writer.write_dump(target, stream)
+
+    env.ok(f'✅ Dump restored: id: {dump.dump_id}')
 
 
 def _add_dump(storage_url: str, stash: models.Stash, tags: List[str] = None):
