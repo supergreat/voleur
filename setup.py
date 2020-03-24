@@ -1,11 +1,12 @@
 import setuptools
+import voleur
 
 with open('README.md', 'r') as fh:
     long_description = fh.read()
 
 setuptools.setup(
     name='voleur',
-    version='0.0.5',
+    version=voleur.__version__,
     author='Supergreat Engineering',
     author_email='alexmic@supergreat.reviews',
     description=(
