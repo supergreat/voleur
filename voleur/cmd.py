@@ -24,9 +24,12 @@ def stash(env: cli.Env):
 
     env.info('💭 Extracting dump...')
 
-    with dumper.extract_dump(source, klepto_config=klepto_config) as stream:
-        path = f'{bucket}/{utils.generate_dump_filename()}'
-        storage_url = storage.store_stream('s3', path, stream)
+    try:
+        with dumper.extract_dump(source, klepto_config=klepto_config) as stream:
+            path = f'{bucket}/{utils.generate_dump_filename()}'
+            storage_url = storage.store_stream('s3', path, stream)
+    except dumper.DumperError as e:
+        env.die(f'❌ Dumper error: {e}')
 
     env.info(f'💩 Dump extracted: {storage_url}')
 
