@@ -6,6 +6,8 @@ from typing import Iterator, ContextManager, BinaryIO, cast
 import boto3
 from botocore import exceptions as botocore_exc
 
+from voleur import utils
+
 
 class StorageError(Exception):
     """Generic storage error."""
@@ -312,8 +314,7 @@ class S3(StorageBackend):
         resp = self._client.get_object(Bucket=bucket, Key=key)
 
         try:
-
-            reader = io.BufferedReader(resp['Body']._raw_stream)
+            reader = utils.iterable_to_stream(resp['Body'].iter_lines())
             yield cast(BinaryIO, reader)
         finally:
             if reader:
