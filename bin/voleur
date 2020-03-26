@@ -41,14 +41,10 @@ from voleur import cli
 
 def main(arguments: dict):
     env = cli.Env(arguments)
-    try:
-        if arguments['stash']:
-            cmd.stash(env)
-        elif arguments['restore']:
-            cmd.restore(env)
-    except Exception as e:
-        # Default error handling.
-        env.die(f'❌ Error: {e}')
+    if arguments['stash']:
+        cmd.stash(env)
+    elif arguments['restore']:
+        cmd.restore(env)
 
 
 if __name__ == '__main__':
