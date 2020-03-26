@@ -1,4 +1,4 @@
-.PHONY: install clean lint typecheck
+.PHONY: install clean lint typecheck wheel
 
 install:
 	pip install -r requirements.txt
@@ -11,3 +11,6 @@ lint:
 
 typecheck:
 	mypy ./voleur
+
+wheel: lint typecheck
+	python3 setup.py sdist bdist_wheel
