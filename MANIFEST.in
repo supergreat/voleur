@@ -1,3 +1,4 @@
+include README.md
 exclude voleur.sublime-project
 exclude runtime.txt
 exclude .pre-commit-config.yaml
