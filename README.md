@@ -44,9 +44,9 @@ voleur stash <source> -b <bucket> [-t <tag>]... [-c <config>]
 
 In the command above:
 
-    * `<source>` is the source database URI (`postgres://...`).
-    * `-b <bucket>` is the S3 bucket.
-    * `-t <tag>...` the tags to apply. You can add multiple tags: `-t foo -t bar`.
+* `<source>` is the source database URI (`postgres://...`).
+* `-b <bucket>` is the S3 bucket.
+* `-t <tag>...` the tags to apply. You can add multiple tags: `-t foo -t bar`.
 
 Since Voleur uses Klepto under the hood, a Klepto config is required and will default to
 `klepto.toml`. It can be overriden using the `-c` option.
@@ -63,9 +63,9 @@ the 20th March 2020.
 If you're running `voleur` nightly and you want an easy way to restore the latest dump
 then then you can add two tags to each dump:
 
-    * A date tag: `master/2020-03-20-2000` (gives you hourly )
-    * A static tag: `master/latest`. Since tags are unique, the existing `latest` tag will
-    now point to the latest dump.
+* A date tag: `master/2020-03-20-2000` (gives you hourly )
+* A static tag: `master/latest`. Since tags are unique, the existing `latest` tag will
+now point to the latest dump.
 
 ### Restoring
 
@@ -80,6 +80,6 @@ voleur restore <dump> <target> -b <bucket>
 
 In the command above:
 
-    * `<dump>` is a dump unique ID or tag.
-    * `<target>` is the target database URI (`postgres://...`).
-    * `-b <bucket>` is the S3 bucket.
+* `<dump>` is a dump unique ID or tag.
+* `<target>` is the target database URI (`postgres://...`).
+* `-b <bucket>` is the S3 bucket.
