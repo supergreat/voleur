@@ -4,9 +4,12 @@ import contextlib
 import platform
 from typing import ContextManager, Iterator, List, Optional, BinaryIO, cast
 
+from voleur import utils
+
 
 DEFAULT_KLEPTO_CONFIG = 'klepto.toml'
 KLEPTO_VERSION = '0.0.9'
+ERR_SYMBOL = '⨯'
 
 
 class DumperError(Exception):
@@ -18,8 +21,8 @@ def extract_dump(
 ) -> ContextManager[BinaryIO]:
     """Extracts and anonymizes a dump from the source database.
 
-    Returns a context manager which yields a stream containing the data (as bytes) from
-    the extracted dump.
+    Returns a context manager which yields a stream containing SQL statements for
+    recostructing the extracted database structure and rows.
 
     Args:
         source_uri: Source database URI.
@@ -44,7 +47,7 @@ def _klepto_steal(from_uri: str, *, config: str) -> Iterator[BinaryIO]:
         config: Path to klepto config file.
 
     Raises:
-        DumperError: If there's an error in running the klepto command,
+        DumperError: If there's an error in running the klepto command.
 
     Yields:
         BinaryIO: A stream to read the output from klepto.
@@ -52,7 +55,7 @@ def _klepto_steal(from_uri: str, *, config: str) -> Iterator[BinaryIO]:
     """
     try:
         args = _get_popen_args(from_uri, config)
-        process = subprocess.Popen(
+        proc = subprocess.Popen(
             args,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
@@ -62,17 +65,85 @@ def _klepto_steal(from_uri: str, *, config: str) -> Iterator[BinaryIO]:
     except FileNotFoundError as e:
         raise DumperError(e)
 
-    stdout = process.stdout
-    stderr = process.stderr
+    stdout = proc.stdout
+    stderr = proc.stderr
 
     try:
-        err_msg = _extract_stderr_err_msg(stderr)
-        if err_msg:
-            raise DumperError(err_msg)
-        yield cast(BinaryIO, stdout)
+        iterable = _consume_output(stdout, stderr)
+        stream = utils.iterable_to_stream(iterable)
+        yield cast(BinaryIO, stream)
     finally:
         stdout.close()
         stderr.close()
+
+
+def _consume_output(stdout, stderr) -> Iterator[bytes]:
+    """Consumes output from stdin and stderr. Checks stderr for klepto error output
+    and stdin for invalid SQL statements to fix.
+
+    Args:
+        stdout
+        stderr
+
+    Raises:
+        DumperError: If error output is encountered.
+
+    Returns:
+        Iterator[bytes]: Yields fixed bytestrings.
+
+    """
+    err_msg = None
+
+    # Read output in two threads to avoid deadlocks.
+    stdout_reader = utils.FileReaderThread(stdout)
+    stdout_reader.start()
+    stderr_reader = utils.FileReaderThread(stderr)
+    stderr_reader.start()
+
+    while not (stdout_reader.eof() and stderr_reader.eof()):
+        for line_bytes in stderr_reader.iter_lines():
+            line_string = line_bytes.strip().decode('utf-8')
+
+            # Print stderr output since it contains informational messages.
+            print('klepto:', line_string)
+
+            if ERR_SYMBOL in line_string[:15]:
+                # On error, stop readers, set err flag. Stopping the readers will
+                # eventually exit this loop.
+                stdout_reader.stop()
+                stderr_reader.stop()
+                err_msg = line_string
+
+        for line_bytes in stdout_reader.iter_lines():
+            yield _process_stdout_line(line_bytes)
+
+    # Be nice and join the threads.
+    stdout_reader.join()
+    stderr_reader.join()
+
+    # After everything has been tidied up, raise the error if any.
+    if err_msg:
+        raise DumperError(err_msg)
+
+
+def _process_stdout_line(line: bytes) -> bytes:
+    """Processes a line of stdout from Klepto.
+
+    Args:
+        line: Klepto output line.
+
+    Returns:
+        bytes
+
+    """
+    if line.startswith(b'INSERT INTO'):
+        line = line.strip()
+        line = line.replace(b'INSERT INTO ', b'INSERT INTO public.')
+        line = line.replace(b'\'NULL\'', b'NULL')
+        line = line.replace(b'+0000 UTC', b'+00')
+        if not line.endswith(b';'):
+            line += b';\n'
+    return line
 
 
 def _validate_klepto_config(config: str):
@@ -86,24 +157,6 @@ def _validate_klepto_config(config: str):
         raise DumperError(f'klepto config ({config}) was not found')
     if not os.path.isfile(config):
         raise DumperError(f'klepto config ({config}) needs to be a file')
-
-
-def _extract_stderr_err_msg(stderr) -> Optional[str]:
-    """Reads `stderr` output and tries to extract an error for determining whether the
-    klepto command has failed.
-
-    Args:
-        stderr: stderr stream.
-
-    Returns:
-        Optional[str]: An error string if there was an error or None.
-
-    """
-    lines = stderr.readlines()
-    if not lines:
-        return None
-    head = lines[0].decode('utf-8')
-    return head if head.lower().startswith('error:') else None
 
 
 def _get_popen_args(from_uri: str, config: str) -> List[str]:
