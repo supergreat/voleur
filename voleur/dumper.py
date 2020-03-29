@@ -69,8 +69,8 @@ def _klepto_steal(from_uri: str, *, config: str) -> Iterator[BinaryIO]:
     stderr = proc.stderr
 
     try:
-        iterable = _consume_output(stdout, stderr)
-        stream = utils.iterable_to_stream(iterable)
+        iterator = _consume_output(stdout, stderr)
+        stream = utils.iterator_to_stream(iterator)
         yield cast(BinaryIO, stream)
     finally:
         stdout.close()

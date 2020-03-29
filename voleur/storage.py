@@ -314,7 +314,7 @@ class S3(StorageBackend):
         resp = self._client.get_object(Bucket=bucket, Key=key)
 
         try:
-            reader = utils.iterable_to_stream(resp['Body'].iter_lines())
+            reader = utils.iterator_to_stream(resp['Body'].iter_lines())
             yield cast(BinaryIO, reader)
         finally:
             if reader:

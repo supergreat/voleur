@@ -41,7 +41,7 @@ class _IteratorStream(io.RawIOBase):
         bytes_to_read = len(b)
 
         try:
-            chunk = self._leftover or (next(self._iterator) + b'\n')
+            chunk = self._leftover or next(self._iterator)
         except StopIteration:
             # We've exhausted the iterator and we don't have any leftovers so we
             # indicate EOF.
@@ -49,10 +49,10 @@ class _IteratorStream(io.RawIOBase):
 
         output, self._leftover = chunk[:bytes_to_read], chunk[bytes_to_read:]
         b[: len(output)] = output
-        return max(1, len(output))
+        return len(output)
 
 
-def iterable_to_stream(iterator: Iterator) -> io.BufferedReader:
+def iterator_to_stream(iterator: Iterator) -> io.BufferedReader:
     """Constructs a `BufferedReader` from an iterator that yields byte strings.
 
     Args:
