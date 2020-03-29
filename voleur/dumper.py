@@ -8,7 +8,7 @@ from voleur import utils
 
 
 DEFAULT_KLEPTO_CONFIG = 'klepto.toml'
-KLEPTO_VERSION = '0.0.9'
+KLEPTO_VERSION = '0.1'
 ERR_SYMBOL = '⨯'
 
 
