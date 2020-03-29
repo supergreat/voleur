@@ -8,6 +8,7 @@
     ],
     "settings": {
         "SublimeLinter.linters.flake8.python": "${HOME}/.pyenv/versions/3.7.6/bin/python3.7",
-        "SublimeLinter.linters.flake8.executable": "${HOME}/.pyenv/versions/3.7.6/bin/flake8"
+        "SublimeLinter.linters.flake8.executable": "${HOME}/.pyenv/versions/3.7.6/bin/flake8",
+        "SublimeLinter.linters.flake8.disable": false
     }
 }
